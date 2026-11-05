@@ -61,18 +61,19 @@ Cel: Rejestrowanie kontekstu powstawania danych oraz opcjonalna walidacja.
    - Walidacja typów z zachowywaniem nieznanych właściwości bez utraty danych.
 
 
-## Faza 5: Bezpieczeństwo i kontrola dostępu (Security & Access Control)
+## Faza 5: Bezpieczeństwo i kontrola dostępu (Security & Access Control) [Zakończona]
 
 Cel: Ochrona danych użytkownika i izolacja aplikacji.
 
-1. **Tożsamość i zaufanie**:
-   - Zarządzanie tożsamością właściciela i zaufanymi urządzeniami.
-   - Rejestracja i autoryzacja aplikacji klienckich.
-2. **Granice uprawnień**:
-   - Jawne reguły dostępu (zakres encji, typów, historii i plików).
-   - Egzekwowanie i cofanie uprawnień.
+1. **Tożsamość i zaufanie** [Zrealizowano]:
+   - Zarządzanie zaufanymi urządzeniami i tożsamościami (`AccessController`).
+   - Rejestracja, uwierzytelnianie i autoryzacja aplikacji klienckich (`AppRegistration`).
+2. **Granice uprawnień** [Zrealizowano]:
+   - Jawne reguły dostępu (`Permission`: encje, pliki binarne, historia, uprawnienia).
+   - Egzekwowanie i natychmiastowe unieważnianie uprawnień oraz aplikacji.
 3. **Opcjonalne szyfrowanie**:
-   - Szyfrowanie danych w spoczynku i zarządzanie kluczami.
+   - Przygotowanie fundamentów pod szyfrowanie danych w spoczynku.
+
 
 ## Faza 6: Synchronizacja rozproszona i praca offline (Sync Engine)
 
