@@ -10,6 +10,7 @@ pub mod schema;
 pub mod security;
 pub mod state;
 pub mod storage;
+pub mod sync;
 pub mod value;
 
 pub use blob::{BlobDescriptor, BlobError, BlobStore};
@@ -24,7 +25,9 @@ pub use schema::{EntitySchema, PropertyDefinition, PropertyType, SchemaValidatio
 pub use security::{AccessController, AppRegistration, Permission, SecurityError};
 pub use state::DatasetState;
 pub use storage::{DiskStorage, StorageError};
+pub use sync::{SyncEngine, SyncError, SyncMessage};
 pub use value::{PropertyName, PropertyValue};
+
 
 
 
