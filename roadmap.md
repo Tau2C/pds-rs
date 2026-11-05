@@ -2,21 +2,22 @@
 
 Ten dokument opisuje etapy realizacji architektury PDS zdefiniowanej w specyfikacji ogólnej.
 
-## Faza 1: Podstawowy model danych (Core Data Model)
+## Faza 1: Podstawowy model danych (Core Data Model) [Zakończona]
 
 Cel: Zapewnienie struktur w pamięci i operacji na podstawowych elementach grafu danych.
 
-1. **Identyfikatory i typy podstawowe**:
-   - Definicja uniwersalnych identyfikatorów (`EntityId`, `RelationId`, `BlobId`, `ChangeId`).
+1. **Identyfikatory i typy podstawowe** [Zrealizowano]:
+   - Definicja uniwersalnych identyfikatorów (`EntityId`, `RelationId`, `BlobId`, `ChangeId` na bazie ULID).
    - Implementacja typów wartości właściwości (`PropertyValue`).
-2. **Encje i właściwości**:
+2. **Encje i właściwości** [Zrealizowano]:
    - Struktura encji z otwartym modelem właściwości (`Entity`).
-   - Przestrzenie nazw dla właściwości i typów.
-3. **Relacje**:
+   - Przestrzenie nazw dla właściwości i typów (`PropertyName`).
+3. **Relacje** [Zrealizowano]:
    - Struktura relacji jako element pierwszej klasy (`Relation`).
    - Właściwości przypisane do relacji.
-4. **Testy jednostkowe**:
+4. **Testy jednostkowe** [Zrealizowano]:
    - Weryfikacja tworzenia, serializacji i deserializacji struktur danych.
+
 
 ## Faza 2: Model historii i operacji (Append-Only Change Model)
 
