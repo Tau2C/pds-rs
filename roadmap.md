@@ -49,16 +49,17 @@ Cel: Trwały zapis historii, indeksów oraz plików binarnych na dysku.
    - Izolacja indeksów od trwałego źródła prawdy.
 
 
-## Faza 4: Pochodzenie danych i schematy (Provenance & Schemas)
+## Faza 4: Pochodzenie danych i schematy (Provenance & Schemas) [Zakończona]
 
 Cel: Rejestrowanie kontekstu powstawania danych oraz opcjonalna walidacja.
 
-1. **Model pochodzenia (Provenance / Activities)**:
-   - Rejestracja aktywności przetwarzania (wejścia, narzędzia, wersje, wyjścia).
+1. **Model pochodzenia (Provenance / Activities)** [Zrealizowano]:
+   - Rejestracja aktywności przetwarzania (`Activity`, `ActivityStatus`, `ProvenanceTarget`).
    - Łączenie wyników ze źródłami bez usuwania danych wejściowych.
-2. **Obsługa schematów**:
-   - Wersjonowane definicje schematów (walidacja typów i pól).
-   - Bezpieczne zachowywanie nieznanych pól i ewolucja schematów bez utraty danych.
+2. **Obsługa schematów** [Zrealizowano]:
+   - Wersjonowane definicje schematów (`EntitySchema`, `PropertyDefinition`, `PropertyType`).
+   - Walidacja typów z zachowywaniem nieznanych właściwości bez utraty danych.
+
 
 ## Faza 5: Bezpieczeństwo i kontrola dostępu (Security & Access Control)
 
