@@ -34,19 +34,20 @@ Cel: Rejestrowanie zmian w postaci niemutowalnego dziennika i rekonstrukcja stan
    - Projekcja encji i relacji z grafu zmian DAG.
 
 
-## Faza 3: Trwały magazyn danych i obiekty binarne (Storage & Blob Engine)
+## Faza 3: Trwały magazyn danych i obiekty binarne (Storage & Blob Engine) [Zakończona]
 
 Cel: Trwały zapis historii, indeksów oraz plików binarnych na dysku.
 
-1. **Magazyn obiektów binarnych (Content-Addressable Storage)**:
-   - Zapis i odczyt plików na podstawie skrótów kryptograficznych (deduplikacja).
-   - Weryfikacja integralności obiektów.
-2. **Silnik zapisu historii**:
-   - Trwałe składowanie jednostek zmian (baza osadzona lub format plikowy).
-   - Ochrona transakcyjna i integralność zapisu.
-3. **Indeksy lokalne**:
-   - Szybki odczyt bieżących encji i relacji.
+1. **Magazyn obiektów binarnych (Content-Addressable Storage)** [Zrealizowano]:
+   - Zapis i odczyt plików na podstawie skrótów SHA-256 (`BlobStore`).
+   - Weryfikacja integralności obiektów oraz automatyczna deduplikacja.
+2. **Silnik zapisu historii** [Zrealizowano]:
+   - Trwałe składowanie jednostek zmian w formacie JSON Lines (`DiskStorage`).
+   - Zachowywanie porządku dopisywania (append-only) i odczyt przy uruchomieniu.
+3. **Indeksy lokalne** [Zrealizowano]:
+   - Szybki odczyt bieżących encji i relacji poprzez stan w pamięci (`DatasetState`).
    - Izolacja indeksów od trwałego źródła prawdy.
+
 
 ## Faza 4: Pochodzenie danych i schematy (Provenance & Schemas)
 
