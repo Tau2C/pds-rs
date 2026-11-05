@@ -87,13 +87,14 @@ Cel: Wymiana danych między urządzeniami offline-first.
    - Zachowywanie alternatyw i bezkonfliktowe dołączanie niezależnych zmian.
 
 
-## Faza 7: Eksport, kopie zapasowe i integracja (Backup & Client API)
+## Faza 7: Eksport, kopie zapasowe i integracja (Backup & Client API) [Zakończona]
 
 Cel: Przenośność danych oraz publiczny interfejs dla aplikacji.
 
-1. **Format eksportu i importu**:
-   - Wersjonowany format archiwum przestrzeni danych.
-   - Weryfikacja integralności i raportowanie brakujących zależności.
-2. **Interfejs klienta**:
-   - Publiczne API biblioteki dla zewnętrznych aplikacji.
-   - Testy integracyjne z symulacją wielu niezależnych aplikacji.
+1. **Format eksportu i importu** [Zrealizowano]:
+   - Wersjonowany format archiwum przestrzeni danych (`PdsArchive`, `PdsArchiveMetadata`).
+   - Weryfikacja integralności i serializacja do formatu JSON.
+2. **Interfejs klienta** [Zrealizowano]:
+   - Publiczne API biblioteki dla zewnętrznych aplikacji (`PdsClient`).
+   - Integracja z kontrolą uprawnień i trwałym magazynem danych.
+
