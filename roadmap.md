@@ -75,16 +75,17 @@ Cel: Ochrona danych użytkownika i izolacja aplikacji.
    - Przygotowanie fundamentów pod szyfrowanie danych w spoczynku.
 
 
-## Faza 6: Synchronizacja rozproszona i praca offline (Sync Engine)
+## Faza 6: Synchronizacja rozproszona i praca offline (Sync Engine) [Zakończona]
 
 Cel: Wymiana danych między urządzeniami offline-first.
 
-1. **Wymiana historii**:
-   - Protokół wykrywania brakujących węzłów w grafie DAG.
-   - Transfer jednostek zmian i obiektów binarnych.
-2. **Obsługa konfliktów**:
-   - Wykrywanie równoległych modyfikacji.
-   - Strategie łączenia zmian i zachowywanie alternatyw.
+1. **Wymiana historii** [Zrealizowano]:
+   - Protokół wykrywania brakujących węzłów w grafie DAG (`SyncMessage`, `SyncEngine`).
+   - Transfer jednostek zmian i synchronizacja bez konieczności centralnego serwera.
+2. **Obsługa konfliktów** [Zrealizowano]:
+   - Wykrywanie rozgałęzień (wielu `heads`) w grafie DAG.
+   - Zachowywanie alternatyw i bezkonfliktowe dołączanie niezależnych zmian.
+
 
 ## Faza 7: Eksport, kopie zapasowe i integracja (Backup & Client API)
 
