@@ -19,19 +19,20 @@ Cel: Zapewnienie struktur w pamięci i operacji na podstawowych elementach grafu
    - Weryfikacja tworzenia, serializacji i deserializacji struktur danych.
 
 
-## Faza 2: Model historii i operacji (Append-Only Change Model)
+## Faza 2: Model historii i operacji (Append-Only Change Model) [Zakończona]
 
 Cel: Rejestrowanie zmian w postaci niemutowalnego dziennika i rekonstrukcja stanu.
 
-1. **Jednostki zmian (Change Units)**:
-   - Definicja atomowych operacji (tworzenie, aktualizacja właściwości, usunięcie logiczne).
-   - Struktura zatwierdzonej zmiany z metadanymi (autor, urządzenie, znacznik czasu).
-2. **Graf historii (DAG)**:
-   - Wiązanie zmian ze stanami poprzednimi (rodzice w grafie DAG).
-   - Wykrywanie rozgałęzień historii.
-3. **Rekonstrukcja stanu (Materialization)**:
-   - Aplikowanie sekwencji zmian w celu uzyskania bieżącego widoku encji.
-   - Odtwarzanie stanu encji z określonego punktu w czasie.
+1. **Jednostki zmian (Change Units)** [Zrealizowano]:
+   - Definicja atomowych operacji (`Operation`).
+   - Struktura zatwierdzonej zmiany z metadanymi (`Change`, `ChangeMetadata`).
+2. **Graf historii (DAG)** [Zrealizowano]:
+   - Wiązanie zmian ze stanami poprzednimi (`HistoryDag`).
+   - Wykrywanie rozgałęzień historii oraz sortowanie topologiczne.
+3. **Rekonstrukcja stanu (Materialization)** [Zrealizowano]:
+   - Aplikowanie sekwencji zmian w celu uzyskania bieżącego widoku (`DatasetState`).
+   - Projekcja encji i relacji z grafu zmian DAG.
+
 
 ## Faza 3: Trwały magazyn danych i obiekty binarne (Storage & Blob Engine)
 
