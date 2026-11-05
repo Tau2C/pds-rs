@@ -7,6 +7,7 @@ pub mod operation;
 pub mod provenance;
 pub mod relation;
 pub mod schema;
+pub mod security;
 pub mod state;
 pub mod storage;
 pub mod value;
@@ -20,9 +21,11 @@ pub use operation::Operation;
 pub use provenance::{Activity, ActivityId, ActivityStatus, ProvenanceTarget};
 pub use relation::Relation;
 pub use schema::{EntitySchema, PropertyDefinition, PropertyType, SchemaValidationError};
+pub use security::{AccessController, AppRegistration, Permission, SecurityError};
 pub use state::DatasetState;
 pub use storage::{DiskStorage, StorageError};
 pub use value::{PropertyName, PropertyValue};
+
 
 
 
