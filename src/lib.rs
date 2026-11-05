@@ -1,5 +1,7 @@
+pub mod archive;
 pub mod blob;
 pub mod change;
+pub mod client;
 pub mod dag;
 pub mod entity;
 pub mod id;
@@ -13,8 +15,10 @@ pub mod storage;
 pub mod sync;
 pub mod value;
 
+pub use archive::{PdsArchive, PdsArchiveMetadata};
 pub use blob::{BlobDescriptor, BlobError, BlobStore};
 pub use change::{Change, ChangeMetadata};
+pub use client::{ClientError, PdsClient};
 pub use dag::{DagError, HistoryDag};
 pub use entity::Entity;
 pub use id::{BlobId, ChangeId, EntityId, RelationId};
@@ -27,6 +31,7 @@ pub use state::DatasetState;
 pub use storage::{DiskStorage, StorageError};
 pub use sync::{SyncEngine, SyncError, SyncMessage};
 pub use value::{PropertyName, PropertyValue};
+
 
 
 
