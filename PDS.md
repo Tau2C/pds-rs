@@ -170,6 +170,22 @@ Domyślną polityką jest brak dostępu bez przyznanego uprawnienia. Cofnięcie 
 
 Urządzenie dopuszczone do synchronizacji i aplikacja uruchomiona na tym urządzeniu są odrębnymi podmiotami zaufania. Samo zaufanie do urządzenia nie musi oznaczać nieograniczonego dostępu każdej aplikacji na tym urządzeniu.
 
+### 7.1. Szyfrowanie danych end-to-end (E2EE)
+
+PDS umożliwia kryptograficzną ochronę poufności danych przed nieuprawnionym dostępem w spoczynku, w tranzycie oraz na węzłach pośredniczących (relay).
+
+Wyróżnia się dwa tryby szyfrowania jednostek zmian (Change):
+
+1. **Tryb hybrydowy (`EncryptedPayload`)**:
+   - Struktura grafu DAG (ChangeId, rodzice) oraz typy encji pozostają jawne i indeksowalne.
+   - Wartości właściwości (`PropertyValue`) oraz zawartość powiązanych obiektów binarnych (bloby) są szyfrowane symetrycznie za pomocą AEAD (np. ChaCha20-Poly1305).
+   - Klucze szyfrujące (DEK) są udostępniane wyłącznie uprawnionym aplikacjom i urządzeniom.
+
+2. **Tryb ślepego grafu (`BlindChange`)**:
+   - Wszystkie operacje, typy encji, właściwości oraz metadane domenowe są zaszyfrowane w całości wewnątrz jednego nienaruszalnego bloku AEAD.
+   - Węzły sieciowe i pośrednicy synchronizacji widzą wyłącznie identyfikatory zmian oraz skierowane krawędzie grafu DAG, co pozwala na replikację historii bez znajomości jakiejkolwiek treści.
+
+
 ## 8. Synchronizacja i praca offline
 
 PDS powinien umożliwiać pracę na wielu zaufanych urządzeniach bez wymogu stałej łączności.

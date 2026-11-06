@@ -1,7 +1,22 @@
-use crate::id::ChangeId;
+use crate::id::{ChangeId, KeyId};
 use crate::operation::Operation;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub enum EncryptionMode {
+    #[default]
+    Plaintext,
+    EncryptedPayload {
+        key_id: KeyId,
+        nonce: [u8; 12],
+    },
+    BlindChange {
+        key_id: KeyId,
+        nonce: [u8; 12],
+        auth_tag: [u8; 16],
+    },
+}
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ChangeMetadata {
@@ -9,6 +24,7 @@ pub struct ChangeMetadata {
     pub device_id: String,
     pub timestamp: DateTime<Utc>,
     pub message: Option<String>,
+    pub encryption_mode: EncryptionMode,
 }
 
 impl ChangeMetadata {
@@ -18,6 +34,7 @@ impl ChangeMetadata {
             device_id: device_id.into(),
             timestamp: Utc::now(),
             message: None,
+            encryption_mode: EncryptionMode::Plaintext,
         }
     }
 
@@ -28,6 +45,11 @@ impl ChangeMetadata {
 
     pub fn with_message(mut self, message: impl Into<String>) -> Self {
         self.message = Some(message.into());
+        self
+    }
+
+    pub fn with_encryption_mode(mut self, mode: EncryptionMode) -> Self {
+        self.encryption_mode = mode;
         self
     }
 }

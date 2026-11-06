@@ -10,6 +10,8 @@ pub enum Permission {
     ReadHistory,
     WriteHistory,
     ManagePermissions,
+    ReadCryptoKeys,
+    ManageCryptoKeys,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

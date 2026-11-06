@@ -64,6 +64,7 @@ define_id!(EntityId, "Unikalny identyfikator encji.");
 define_id!(RelationId, "Unikalny identyfikator relacji.");
 define_id!(BlobId, "Unikalny identyfikator zasobu binarnego.");
 define_id!(ChangeId, "Unikalny identyfikator jednostki zmiany.");
+define_id!(KeyId, "Unikalny identyfikator klucza szyfrowania E2EE.");
 
 #[cfg(test)]
 mod tests {
