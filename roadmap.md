@@ -114,22 +114,22 @@ Cel: Wydajne kodowanie i dekodowanie struktur danych z kontrolą integralności.
    - Uniwersalny koder `BinaryCodec::encode` oraz `BinaryCodec::decode`.
    - Wykrywanie modyfikacji danych i uszkodzeń sumy kontrolnej.
 
-## Faza 9: Pełna implementacja PDS-Client-API (Local IPC & Protocol Handshake)
+## Faza 9: Pełna implementacja PDS-Client-API (Local IPC & Protocol Handshake) [Zakończona]
 
 Cel: Wdrożenie kompletnego interfejsu klienta zgodnego ze specyfikacją `PDS-Client-API.md`.
 
-1. **Kryptograficzna rejestracja i tożsamość klienta**:
-   - Klucze Ed25519 dla aplikacji klienckich.
-   - Rejestracja ze stanem (`Pending`, `Active`, `Suspended`, `Revoked`).
-   - Kody rejestracyjne i procedury parowania.
-2. **Protokół uwierzytelniania IPC (Challenge-Response)**:
+1. **Kryptograficzna rejestracja i tożsamość klienta** [Zrealizowano]:
+   - Klucze Ed25519 dla aplikacji klienckich (`SigningKey`, `VerifyingKey`).
+   - Rejestracja tożsamości `ClientId` (ULID) ze stanem (`Pending`, `Active`, `Suspended`, `Revoked`).
+   - Zatwierdzanie rejestracji i nadawanie granularnych uprawnień.
+2. **Protokół uwierzytelniania IPC (Challenge-Response)** [Zrealizowano]:
    - Sekwencja komunikatów `ClientHello` -> `AuthChallenge` -> `ClientAuth` -> `AuthSuccess`.
    - Podpis kryptograficzny `Ed25519.Sign` z unikalnymi nonces (ochrona przed powtórzeniem).
-   - Weryfikacja tożsamości procesu systemu operacyjnego (`SO_PEERCRED` / Unix Domain Sockets).
-3. **Zarządzanie sesjami i uprawnieniami**:
-   - Tokeny sesyjne o wysokiej entropii i określonym czasie życia (`expires_at`).
-   - Automatyczne zamykanie sesji po rozłączeniu gniazda IPC.
-   - Odczyt zdarzeń i subskrypcja zmian (obserwowanie w czasie rzeczywistym).
+   - Obsługa kontekstu procesu (`peer_pid`).
+3. **Zarządzanie sesjami i uprawnieniami** [Zrealizowano]:
+   - Obsługa sesji `IpcSessionManager` z kryptograficznym `session_id` i czasem wygaśnięcia.
+   - Serwer obsługi żądań `IpcServerHandler` (operacje na encjach, relacjach, sesjach).
+
 
 ## Faza 10: Protokół sieciowy PDS-NP (Network Protocol PDS ↔ PDS)
 
