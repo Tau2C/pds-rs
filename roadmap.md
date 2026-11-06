@@ -145,4 +145,30 @@ Cel: Wdrożenie protokołu komunikacji międzyinstancyjnej zgodnego ze specyfika
    - Struktury komunikatów handshake (`NpClientHello`, `NpServerHello`, `NpClientAuth`, `NpServerFinished`).
    - Wyprowadzanie identyfikatora sesji z transcriptu `session_id = SHA256("PDS-NP-SESSION" || transcript_hash)`.
 
+## Faza 11: Szyfrowanie danych End-to-End (E2EE) [Zakończona]
+
+Cel: Wdrożenie kryptograficznej ochrony poufności danych w spoczynku, w tranzycie oraz na węzłach relay.
+
+1. **Tryby szyfrowania zmian (Encryption Modes)** [Zrealizowano]:
+   - Wprowadzenie `EncryptionMode` (`Plaintext`, `EncryptedPayload`, `BlindChange`) w metadanych `ChangeMetadata`.
+   - Zdefiniowanie `KeyId` (ULID) do zarządzania kluczami szyfrującymi.
+2. **Silnik kryptograficzny (AEAD & KeyStore)** [Zrealizowano]:
+   - Szyfrowanie uwierzytelnione ChaCha20-Poly1305 w `KeyStore`.
+   - Wariant `PropertyValue::Encrypted` z pełnym wsparciem w walidacji schematów `EntitySchema`.
+   - Uprawnienia kryptograficzne `Permission::ReadCryptoKeys` oraz `Permission::ManageCryptoKeys`.
+3. **Specyfikacja i testy integracyjne** [Zrealizowano]:
+   - Aktualizacja dokumentów specyfikacji `PDS.md`, `PDS-Client-API.md`, `PDS-NP.md`.
+   - Testy replikacji ślepego grafu DAG oraz cyklu życia szyfrowanych właściwości w `tests/test_e2ee_encryption.rs`.
+
+## Faza 12: Zgodność wsteczna i macierz wersji klientów (Backward Compatibility & Version Matrix) [W trakcie]
+
+Cel: Zapewnienie bezproblemowej współpracy serwera PDS ze starszymi wersjami aplikacji klienckich oraz węzłami sieciowymi.
+
+1. **Macierz wersji protokołów i klientów** [Do zrobienia]:
+   - Zestaw atrap/symulatorów klientów dla wersji `v1.0.0`, `v1.0.1`, `v1.1.0`.
+   - Negocjacja wersji w `ClientHello` i `NpClientHello` z obsługą starszych klientów.
+2. **Automatyczne testy regresji i zgodności wstecznej** [Do zrobienia]:
+   - Testy odczytu i zapisu danych utworzonych przez starsze wersje struktur.
+   - Weryfikacja migracji binarnej i zachowania nieznanych pól.
+
 
