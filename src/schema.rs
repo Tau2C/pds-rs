@@ -94,6 +94,7 @@ impl EntitySchema {
     fn matches_type(&self, val: &PropertyValue, expected: &PropertyType) -> bool {
         match (val, expected) {
             (_, PropertyType::Any) => true,
+            (PropertyValue::Encrypted { .. }, _) => true,
             (PropertyValue::Bool(_), PropertyType::Bool) => true,
             (PropertyValue::Int(_), PropertyType::Int) => true,
             (PropertyValue::Float(_), PropertyType::Float) => true,
@@ -117,6 +118,7 @@ impl EntitySchema {
             PropertyValue::DateTime(_) => "DateTime",
             PropertyValue::EntityRef(_) => "EntityRef",
             PropertyValue::BlobRef(_) => "BlobRef",
+            PropertyValue::Encrypted { .. } => "Encrypted",
             PropertyValue::List(_) => "List",
             PropertyValue::Map(_) => "Map",
         }
