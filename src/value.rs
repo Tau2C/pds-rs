@@ -1,4 +1,4 @@
-use crate::id::{BlobId, EntityId};
+use crate::id::{BlobId, EntityId, KeyId};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 use std::collections::BTreeMap;
@@ -84,6 +84,10 @@ pub enum PropertyValue {
     DateTime(DateTime<Utc>),
     EntityRef(EntityId),
     BlobRef(BlobId),
+    Encrypted {
+        key_id: KeyId,
+        ciphertext: Vec<u8>,
+    },
     List(Vec<PropertyValue>),
     Map(BTreeMap<String, PropertyValue>),
 }

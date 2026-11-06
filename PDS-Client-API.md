@@ -587,6 +587,8 @@ Przykładowe uprawnienia:
 | `schema.manage` | Zarządzanie schematami |
 | `client.read` | Odczyt rejestracji klientów |
 | `client.manage` | Zarządzanie rejestracją klientów |
+| `crypto.read` | Odczyt kluczy szyfrujących E2EE |
+| `crypto.manage` | Zarządzanie kluczami i rotacja E2EE |
 | `admin` | Operacje administracyjne |
 
 Lista ma charakter logiczny i może być rozszerzana.
@@ -846,7 +848,19 @@ Rozłączenie klienta nie oznacza automatycznego anulowania zadania.
 
 Politykę kontynuowania zadań określa lokalna instancja PDS.
 
-## 18. Synchronizacja z innymi instancjami
+## 18. Zarządzanie kluczami E2EE
+
+PDS-Client-API udostępnia operacje zarządzania kluczami szyfrującymi dla aplikacji korzystających z szyfrowania end-to-end:
+
+- `crypto.key.get` — pobranie klucza publicznego lub owiniętego klucza symetrycznego dla danego `KeyId`;
+- `crypto.key.register` — zarejestrowanie nowego klucza domeny lub przestrzeni nazw;
+- `crypto.key.wrap` — dodanie wersji klucza owiniętej kluczem publicznym innego zaufanego urządzenia;
+- `crypto.key.rotate` — rotacja klucza symetrycznego dla nowych zmian.
+
+Aplikacja kliencka posiadająca uprawnienie `crypto.manage` może konfigurować politykę szyfrowania dla własnej przestrzeni nazw (np. wymuszenie trybu `EncryptedPayload` lub `BlindChange`).
+
+
+## 19. Synchronizacja z innymi instancjami
 
 PDS-Client-API może udostępniać operacje zarządzania synchronizacją.
 

@@ -4,6 +4,7 @@ pub mod blob;
 pub mod change;
 pub mod client;
 pub mod codec;
+pub mod crypto;
 pub mod dag;
 pub mod entity;
 pub mod id;
@@ -26,12 +27,13 @@ pub use auth::{
     AUTH_CONTEXT_TAG,
 };
 pub use blob::{BlobDescriptor, BlobError, BlobStore};
-pub use change::{Change, ChangeMetadata};
+pub use change::{Change, ChangeMetadata, EncryptionMode};
 pub use client::{ClientError, PdsClient};
 pub use codec::{BinaryCodec, CodecError, PDS_MAGIC_HEADER};
+pub use crypto::{CryptoError, EncryptedData, KeyStore};
 pub use dag::{DagError, HistoryDag};
 pub use entity::Entity;
-pub use id::{BlobId, ChangeId, EntityId, RelationId};
+pub use id::{BlobId, ChangeId, EntityId, KeyId, RelationId};
 pub use ipc::{IpcRequest, IpcResponse, IpcServerHandler, IpcSessionManager, Session};
 pub use np::{
     MessageId, MessageType, NodeIdentityId, NpClientAuth, NpClientHello, NpError, NpFrame,
