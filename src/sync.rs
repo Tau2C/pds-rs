@@ -145,7 +145,9 @@ mod tests {
         };
 
         match resp_from_b {
-            SyncMessage::SyncResponse { missing_changes, .. } => {
+            SyncMessage::SyncResponse {
+                missing_changes, ..
+            } => {
                 let applied = SyncEngine::apply_response(&mut dag_a, missing_changes).unwrap();
                 assert_eq!(applied, 1);
             }

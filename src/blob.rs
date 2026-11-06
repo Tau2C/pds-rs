@@ -46,7 +46,6 @@ impl BlobStore {
         hex::encode(hasher.finalize())
     }
 
-
     fn blob_path(&self, sha256: &str) -> PathBuf {
         let prefix = &sha256[..2];
         let rest = &sha256[2..];

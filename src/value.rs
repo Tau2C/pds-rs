@@ -1,6 +1,6 @@
 use crate::id::{BlobId, EntityId};
 use chrono::{DateTime, Utc};
-use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 use std::collections::BTreeMap;
 use std::fmt;
 use std::str::FromStr;
@@ -72,7 +72,6 @@ impl<'de> Deserialize<'de> for PropertyName {
         s.parse().map_err(de::Error::custom)
     }
 }
-
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", content = "value")]

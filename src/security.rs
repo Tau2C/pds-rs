@@ -118,7 +118,10 @@ mod tests {
         app.grant(Permission::ReadEntities);
         ac.register_app(app);
 
-        assert!(ac.check_permission("app:notes", &Permission::ReadEntities).is_ok());
+        assert!(
+            ac.check_permission("app:notes", &Permission::ReadEntities)
+                .is_ok()
+        );
         assert!(matches!(
             ac.check_permission("app:notes", &Permission::WriteEntities),
             Err(SecurityError::PermissionDenied { .. })

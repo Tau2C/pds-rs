@@ -109,12 +109,7 @@ mod tests {
         let mut dag = HistoryDag::new();
 
         let root_id = ChangeId::new();
-        let root_change = Change::new(
-            root_id,
-            vec![],
-            ChangeMetadata::new("device-1"),
-            vec![],
-        );
+        let root_change = Change::new(root_id, vec![], ChangeMetadata::new("device-1"), vec![]);
         dag.insert(root_change).unwrap();
         assert_eq!(dag.heads().len(), 1);
         assert!(dag.heads().contains(&root_id));

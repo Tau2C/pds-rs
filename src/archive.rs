@@ -61,7 +61,10 @@ mod tests {
         let archive = PdsArchive::new(vec![], vec![], vec![]);
         let json = archive.to_json().unwrap();
         let restored = PdsArchive::from_json(&json).unwrap();
-        assert_eq!(archive.metadata.format_version, restored.metadata.format_version);
+        assert_eq!(
+            archive.metadata.format_version,
+            restored.metadata.format_version
+        );
         assert_eq!(archive.changes.len(), restored.changes.len());
     }
 }
