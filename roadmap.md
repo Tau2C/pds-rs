@@ -1,8 +1,12 @@
 # Personal Data Store (PDS) - Plan Wdrożenia (Roadmap)
 
-Ten dokument opisuje etapy realizacji architektury PDS zdefiniowanej w specyfikacji ogólnej.
+Ten dokument opisuje etapy realizacji architektury PDS zdefiniowanej w specyfikacjach:
+- [`PDS.md`](PDS.md) — Ogólna specyfikacja architektury danych
+- [`PDS-Client-API.md`](PDS-Client-API.md) — Interfejs dostępu aplikacji (In-process oraz Local IPC)
+- [`PDS-NP.md`](PDS-NP.md) — Protokół komunikacji sieciowej PDS ↔ PDS
 
 ## Faza 1: Podstawowy model danych (Core Data Model) [Zakończona]
+
 
 Cel: Zapewnienie struktur w pamięci i operacji na podstawowych elementach grafu danych.
 
@@ -109,3 +113,35 @@ Cel: Wydajne kodowanie i dekodowanie struktur danych z kontrolą integralności.
 2. **Koder i dekoder** [Zrealizowano]:
    - Uniwersalny koder `BinaryCodec::encode` oraz `BinaryCodec::decode`.
    - Wykrywanie modyfikacji danych i uszkodzeń sumy kontrolnej.
+
+## Faza 9: Pełna implementacja PDS-Client-API (Local IPC & Protocol Handshake)
+
+Cel: Wdrożenie kompletnego interfejsu klienta zgodnego ze specyfikacją `PDS-Client-API.md`.
+
+1. **Kryptograficzna rejestracja i tożsamość klienta**:
+   - Klucze Ed25519 dla aplikacji klienckich.
+   - Rejestracja ze stanem (`Pending`, `Active`, `Suspended`, `Revoked`).
+   - Kody rejestracyjne i procedury parowania.
+2. **Protokół uwierzytelniania IPC (Challenge-Response)**:
+   - Sekwencja komunikatów `ClientHello` -> `AuthChallenge` -> `ClientAuth` -> `AuthSuccess`.
+   - Podpis kryptograficzny `Ed25519.Sign` z unikalnymi nonces (ochrona przed powtórzeniem).
+   - Weryfikacja tożsamości procesu systemu operacyjnego (`SO_PEERCRED` / Unix Domain Sockets).
+3. **Zarządzanie sesjami i uprawnieniami**:
+   - Tokeny sesyjne o wysokiej entropii i określonym czasie życia (`expires_at`).
+   - Automatyczne zamykanie sesji po rozłączeniu gniazda IPC.
+   - Odczyt zdarzeń i subskrypcja zmian (obserwowanie w czasie rzeczywistym).
+
+## Faza 10: Protokół sieciowy PDS-NP (Network Protocol PDS ↔ PDS)
+
+Cel: Wdrożenie protokołu komunikacji międzyinstancyjnej zgodnego ze specyfikacją `PDS-NP.md`.
+
+1. **Tożsamość kryptograficzna węzłów**:
+   - Para kluczy Ed25519 instancji i odcisk `identity_id = SHA256(public_key)`.
+   - Model wzajemnego zaufania instancji PDS.
+2. **Warstwa transportowa i szyfrowanie**:
+   - Adapter transportowy (domyślnie `iroh` QUIC / WireGuard).
+   - Obowiązkowe szyfrowanie i podpisywanie każdej ramki protokołu.
+3. **Protokół synchronizacji PDS-NP**:
+   - Negocjacja wersji, wymiana nagłówków DAG i transfer brakujących jednostek zmian.
+   - Strumieniowy transfer i wznawianie pobierania dużych blobów.
+
