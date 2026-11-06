@@ -6,6 +6,7 @@ edition = "2024"
 
 
 [dependencies]
+chacha20poly1305 = "0.11.0"
 chrono = { version = "0.4.45", features = ["serde"] }
 ciborium = "0.2.2"
 ed25519-dalek = { version = "3.0.0", features = ["rand_core"] }
