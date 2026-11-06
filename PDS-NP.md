@@ -509,6 +509,10 @@ Odbiorca musi zweryfikować dane zgodnie z modelem historii, integralności i za
 
 Rozwiązywanie konfliktów należy do modelu synchronizacji PDS, a nie do transportu.
 
+W przypadku jednostek zmian w trybie `EncryptedPayload` lub `BlindChange`:
+- Węzły sieciowe przesyłają zaszyfrowany ładunek bez jego modyfikacji.
+- Węzły pośredniczące (relay) mogą uczestniczyć w replikacji i przechowywaniu zmian wyłącznie na podstawie jawnej struktury DAG bez znajomości kluczy deszyfrujących.
+
 ### 9.3 Transfer blobów
 
 | Wiadomość | Znaczenie |
