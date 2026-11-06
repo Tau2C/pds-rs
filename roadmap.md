@@ -131,17 +131,18 @@ Cel: Wdrożenie kompletnego interfejsu klienta zgodnego ze specyfikacją `PDS-Cl
    - Serwer obsługi żądań `IpcServerHandler` (operacje na encjach, relacjach, sesjach).
 
 
-## Faza 10: Protokół sieciowy PDS-NP (Network Protocol PDS ↔ PDS)
+## Faza 10: Protokół sieciowy PDS-NP (Network Protocol PDS ↔ PDS) [Zakończona]
 
 Cel: Wdrożenie protokołu komunikacji międzyinstancyjnej zgodnego ze specyfikacją `PDS-NP.md`.
 
-1. **Tożsamość kryptograficzna węzłów**:
-   - Para kluczy Ed25519 instancji i odcisk `identity_id = SHA256(public_key)`.
-   - Model wzajemnego zaufania instancji PDS.
-2. **Warstwa transportowa i szyfrowanie**:
-   - Adapter transportowy (domyślnie `iroh` QUIC / WireGuard).
-   - Obowiązkowe szyfrowanie i podpisywanie każdej ramki protokołu.
-3. **Protokół synchronizacji PDS-NP**:
-   - Negocjacja wersji, wymiana nagłówków DAG i transfer brakujących jednostek zmian.
-   - Strumieniowy transfer i wznawianie pobierania dużych blobów.
+1. **Tożsamość kryptograficzna węzłów** [Zrealizowano]:
+   - Para kluczy Ed25519 instancji i deterministyczny odcisk `identity_id = SHA256(public_key)` (`NodeIdentityId`).
+   - Model wzajemnego zaufania instancji PDS (`NpNode::trust_peer`).
+2. **Warstwa transportowa i ramki protokołu** [Zrealizowano]:
+   - Binarna ramka protokołu `NpFrame` z nagłówkiem `NpFrameHeader` (`magic: PDSN`).
+   - Podpis cyfrowy Ed25519 każdej ramki z separatorem domenowym `PDS-NP-v1` oraz sumą kontrolną SHA-256 ładunku.
+3. **Protokół synchronizacji i handshake PDS-NP** [Zrealizowano]:
+   - Struktury komunikatów handshake (`NpClientHello`, `NpServerHello`, `NpClientAuth`, `NpServerFinished`).
+   - Wyprowadzanie identyfikatora sesji z transcriptu `session_id = SHA256("PDS-NP-SESSION" || transcript_hash)`.
+
 

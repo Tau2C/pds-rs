@@ -8,6 +8,7 @@ pub mod dag;
 pub mod entity;
 pub mod id;
 pub mod ipc;
+pub mod np;
 pub mod operation;
 pub mod provenance;
 pub mod relation;
@@ -32,6 +33,11 @@ pub use dag::{DagError, HistoryDag};
 pub use entity::Entity;
 pub use id::{BlobId, ChangeId, EntityId, RelationId};
 pub use ipc::{IpcRequest, IpcResponse, IpcServerHandler, IpcSessionManager, Session};
+pub use np::{
+    MessageId, MessageType, NodeIdentityId, NpClientAuth, NpClientHello, NpError, NpFrame,
+    NpFrameHeader, NpNode, NpServerFinished, NpServerHello, NP_DOMAIN_SEPARATOR, NP_MAGIC,
+    NP_VERSION,
+};
 pub use operation::Operation;
 pub use provenance::{Activity, ActivityId, ActivityStatus, ProvenanceTarget};
 pub use relation::Relation;
@@ -41,4 +47,5 @@ pub use state::DatasetState;
 pub use storage::{DiskStorage, StorageError};
 pub use sync::{SyncEngine, SyncError, SyncMessage};
 pub use value::{PropertyName, PropertyValue};
+
 
