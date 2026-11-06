@@ -98,3 +98,14 @@ Cel: Przenośność danych oraz publiczny interfejs dla aplikacji.
    - Publiczne API biblioteki dla zewnętrznych aplikacji (`PdsClient`).
    - Integracja z kontrolą uprawnień i trwałym magazynem danych.
 
+## Faza 8: Format binarny (Binary Codec) [Zakończona]
+
+Cel: Wydajne kodowanie i dekodowanie struktur danych z kontrolą integralności.
+
+1. **Format ramki binarnej** [Zrealizowano]:
+   - Nagłówek `PDS1` (4 bajty).
+   - Suma kontrolna SHA-256 payloadu (32 bajty).
+   - Bezpieczna serializacja payloadu w standardzie CBOR (`ciborium`).
+2. **Koder i dekoder** [Zrealizowano]:
+   - Uniwersalny koder `BinaryCodec::encode` oraz `BinaryCodec::decode`.
+   - Wykrywanie modyfikacji danych i uszkodzeń sumy kontrolnej.
