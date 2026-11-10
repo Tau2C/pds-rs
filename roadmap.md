@@ -171,4 +171,24 @@ Cel: Zapewnienie bezproblemowej współpracy serwera PDS ze starszymi wersjami a
    - Testy odczytu i zapisu danych utworzonych przez starsze wersje struktur bez `encryption_mode` (`tests/test_backward_compat.rs`).
    - Weryfikacja deserializacji z `#[serde(default)]` i poprawności round-trip.
 
+## Faza 13: Ciągła integracja i automatyczne testy regresji (CI Pipeline) [Zakończona]
+
+Cel: Automatyzacja weryfikacji jakości kodu, linterów oraz testów regresji przy każdym commicie i PR.
+
+1. **Workflow GitHub Actions** [Zrealizowano]:
+   - Konfiguracja przepływu `.github/workflows/ci.yml`.
+   - Sprawdzanie kompilacji wszystkich celów (`cargo check --all-targets`).
+   - Rygorystyczna analiza statyczna (`cargo clippy --all-targets -- -D warnings`).
+   - Pełna bateria testów jednostkowych i integracyjnych oraz testów regresji wstecznej.
+
+## Faza 14: Ochrona schematów i odporność na nieznane operacje (Forward Compatibility) [Zakończona]
+
+Cel: Umożliwienie bezstratnej replikacji DAG zawierającego nieznane lub przyszłe typy operacji oraz walidacja mutacji na poziomie schematów.
+
+1. **Nieznane typy operacji (Forward Compatibility)** [Zrealizowano]:
+   - Wprowadzenie wariantu `Operation::Unknown { action, payload }` z zachowaniem oryginalnego ładunku JSON/CBOR.
+   - Bezpieczna projekcja stanu lokalnego `DatasetState` z pomijaniem nieznanych operacji bez paniki.
+2. **Walidacja operacji w schematach** [Zrealizowano]:
+   - Metoda `EntitySchema::validate_operation` do wczesnego wykrywania niezgodności typów właściwości przed zaaplikowaniem operacji do stanu.
+
 
