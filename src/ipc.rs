@@ -58,6 +58,7 @@ pub struct Session {
     pub permissions: BTreeSet<Permission>,
     pub expires_at: DateTime<Utc>,
     pub peer_pid: Option<u32>,
+    pub api_version: String,
 }
 
 #[derive(Default)]
@@ -133,6 +134,7 @@ impl<'a> IpcServerHandler<'a> {
                         permissions: success.permissions.clone(),
                         expires_at: success.expires_at,
                         peer_pid,
+                        api_version: success.api_version.clone(),
                     });
                     IpcResponse::Authenticated(success)
                 }
@@ -268,12 +270,12 @@ mod tests {
 
         let mut nonce = [0u8; 32];
         csprng.fill_bytes(&mut nonce);
-        let hello = ClientHello {
+        let hello = ClientHello::new(
             client_id,
-            api_version: API_VERSION.to_string(),
-            client_nonce: nonce,
-            capabilities: vec!["ipc".into()],
-        };
+            API_VERSION,
+            nonce,
+            vec!["ipc".into()],
+        );
 
         let resp = handler.handle_request(IpcRequest::Hello(hello), Some(1234));
         let challenge = match resp {
