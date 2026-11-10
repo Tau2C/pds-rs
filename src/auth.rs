@@ -7,6 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use ulid::Ulid;
 
 pub const API_VERSION: &str = "1.1.0";
+pub const DEFAULT_SUPPORTED_API_VERSIONS: &[&str] = &["1.0.0", "1.0.1", "1.1.0"];
 pub const AUTH_CONTEXT_TAG: &str = "PDS-CLIENT-AUTH-v1";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -55,6 +56,34 @@ pub struct ClientHello {
     pub api_version: String,
     pub client_nonce: [u8; 32],
     pub capabilities: Vec<String>,
+    #[serde(default)]
+    pub supported_versions: Vec<String>,
+}
+
+impl ClientHello {
+    pub fn new(
+        client_id: ClientId,
+        api_version: impl Into<String>,
+        client_nonce: [u8; 32],
+        capabilities: Vec<String>,
+    ) -> Self {
+        Self {
+            client_id,
+            api_version: api_version.into(),
+            client_nonce,
+            capabilities,
+            supported_versions: Vec::new(),
+        }
+    }
+
+    pub fn with_supported_versions<I, S>(mut self, versions: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        self.supported_versions = versions.into_iter().map(Into::into).collect();
+        self
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -101,6 +130,7 @@ pub enum AuthError {
 
 pub struct ClientAuthenticator {
     server_instance_id: String,
+    supported_versions: Vec<String>,
     clients: BTreeMap<ClientId, ClientRecord>,
     active_challenges: BTreeMap<ClientId, AuthChallenge>,
 }
@@ -109,9 +139,26 @@ impl ClientAuthenticator {
     pub fn new(server_instance_id: impl Into<String>) -> Self {
         Self {
             server_instance_id: server_instance_id.into(),
+            supported_versions: DEFAULT_SUPPORTED_API_VERSIONS
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
             clients: BTreeMap::new(),
             active_challenges: BTreeMap::new(),
         }
+    }
+
+    pub fn with_supported_versions<I, S>(mut self, versions: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        self.supported_versions = versions.into_iter().map(Into::into).collect();
+        self
+    }
+
+    pub fn supported_versions(&self) -> &[String] {
+        &self.supported_versions
     }
 
     pub fn register_client(
@@ -143,13 +190,27 @@ impl ClientAuthenticator {
         self.clients.get(client_id)
     }
 
-    pub fn handle_client_hello(&mut self, hello: &ClientHello) -> Result<AuthChallenge, AuthError> {
-        if hello.api_version != API_VERSION {
-            return Err(AuthError::UnsupportedApiVersion {
-                expected: API_VERSION.to_string(),
-                actual: hello.api_version.clone(),
-            });
+    pub fn negotiate_version(&self, hello: &ClientHello) -> Result<String, AuthError> {
+        let requested_versions: Vec<&str> = if !hello.supported_versions.is_empty() {
+            hello.supported_versions.iter().map(|s| s.as_str()).collect()
+        } else {
+            vec![hello.api_version.as_str()]
+        };
+
+        for server_ver in self.supported_versions.iter().rev() {
+            if requested_versions.contains(&server_ver.as_str()) {
+                return Ok(server_ver.clone());
+            }
         }
+
+        Err(AuthError::UnsupportedApiVersion {
+            expected: self.supported_versions.join(", "),
+            actual: hello.api_version.clone(),
+        })
+    }
+
+    pub fn handle_client_hello(&mut self, hello: &ClientHello) -> Result<AuthChallenge, AuthError> {
+        let negotiated_version = self.negotiate_version(hello)?;
 
         let client = self
             .clients
@@ -168,7 +229,7 @@ impl ClientAuthenticator {
             client_id: hello.client_id,
             client_nonce: hello.client_nonce,
             server_nonce,
-            api_version: API_VERSION.to_string(),
+            api_version: negotiated_version,
             challenge_expires_at: Utc::now() + Duration::seconds(60),
         };
 
@@ -282,12 +343,12 @@ mod tests {
 
         let mut client_nonce = [0u8; 32];
         csprng.fill_bytes(&mut client_nonce);
-        let hello = ClientHello {
+        let hello = ClientHello::new(
             client_id,
-            api_version: API_VERSION.to_string(),
+            API_VERSION,
             client_nonce,
-            capabilities: vec!["ipc".into()],
-        };
+            vec!["ipc".into()],
+        );
 
         let challenge = server.handle_client_hello(&hello).unwrap();
         assert_eq!(challenge.client_id, client_id);
@@ -302,5 +363,78 @@ mod tests {
         assert_eq!(success.client_id, client_id);
         assert_eq!(success.permissions, perms);
         assert_eq!(success.session_id.len(), 64);
+        assert_eq!(success.api_version, API_VERSION);
+    }
+
+    #[test]
+    fn test_client_api_version_negotiation_legacy_single_version() {
+        let mut server = ClientAuthenticator::new("pds-local-node-1");
+
+        let signing_key = SigningKey::from_bytes(&[1u8; 32]);
+        let public_key = signing_key.verifying_key().to_bytes();
+        let client_id = server.register_client("LegacyClient", public_key);
+        server.approve_client(&client_id, BTreeSet::new());
+
+        let hello = ClientHello {
+            client_id,
+            api_version: "1.0.0".to_string(),
+            client_nonce: [2u8; 32],
+            capabilities: vec![],
+            supported_versions: vec![],
+        };
+
+        let challenge = server.handle_client_hello(&hello).unwrap();
+        assert_eq!(challenge.api_version, "1.0.0");
+
+        let sig = create_client_auth_signature(&signing_key, &challenge);
+        let auth = ClientAuth {
+            client_id,
+            signature: sig,
+        };
+        let success = server.handle_client_auth(&auth).unwrap();
+        assert_eq!(success.api_version, "1.0.0");
+    }
+
+    #[test]
+    fn test_client_api_version_negotiation_multi_versions() {
+        let mut server = ClientAuthenticator::new("pds-local-node-1");
+
+        let signing_key = SigningKey::from_bytes(&[3u8; 32]);
+        let public_key = signing_key.verifying_key().to_bytes();
+        let client_id = server.register_client("ModernClient", public_key);
+        server.approve_client(&client_id, BTreeSet::new());
+
+        // Client supports 1.0.0 and 1.1.0, server supports 1.0.0, 1.0.1, 1.1.0 -> should pick highest (1.1.0)
+        let hello = ClientHello {
+            client_id,
+            api_version: "1.0.0".to_string(),
+            client_nonce: [4u8; 32],
+            capabilities: vec![],
+            supported_versions: vec!["1.0.0".to_string(), "1.1.0".to_string()],
+        };
+
+        let challenge = server.handle_client_hello(&hello).unwrap();
+        assert_eq!(challenge.api_version, "1.1.0");
+    }
+
+    #[test]
+    fn test_client_api_version_negotiation_unsupported() {
+        let mut server = ClientAuthenticator::new("pds-local-node-1");
+
+        let signing_key = SigningKey::from_bytes(&[5u8; 32]);
+        let public_key = signing_key.verifying_key().to_bytes();
+        let client_id = server.register_client("FutureClient", public_key);
+        server.approve_client(&client_id, BTreeSet::new());
+
+        let hello = ClientHello {
+            client_id,
+            api_version: "2.0.0".to_string(),
+            client_nonce: [6u8; 32],
+            capabilities: vec![],
+            supported_versions: vec!["2.0.0".to_string()],
+        };
+
+        let err = server.handle_client_hello(&hello).unwrap_err();
+        assert!(matches!(err, AuthError::UnsupportedApiVersion { .. }));
     }
 }
