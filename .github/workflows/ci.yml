@@ -1,0 +1,52 @@
+name: CI & Regression Tests
+
+on:
+  push:
+    branches:
+      - develop
+      - master
+      - 'backport/**'
+  pull_request:
+    branches:
+      - develop
+      - master
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  test:
+    name: Test Suite & Backward Compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Compile and check targets
+        run: cargo check --all-targets
+
+      - name: Run clippy checks
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Run all tests
+        run: cargo test --all-targets
+
+      - name: Run backward compatibility regression tests
+        run: cargo test --test test_backward_compat -- --nocapture
