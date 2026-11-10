@@ -34,7 +34,7 @@ fn v100_change_json(change_id: ChangeId, device_id: &str) -> String {
 #[test]
 fn v100_change_deserializes_as_plaintext() {
     let id = ChangeId::new();
-    let json = v100_change_json(id.clone(), "device-old");
+    let json = v100_change_json(id, "device-old");
 
     let change: Change = serde_json::from_str(&json)
         .expect("v1.0.0 Change JSON must deserialize without error");
@@ -77,7 +77,7 @@ fn v110_encrypted_payload_round_trips() {
     let key_id = KeyId::new();
     let nonce = [1u8; 12];
     let meta =
-        compat::client_v1_1_0::encrypted_payload_metadata("device-new", key_id.clone(), nonce);
+        compat::client_v1_1_0::encrypted_payload_metadata("device-new", key_id, nonce);
 
     let json = serde_json::to_string(&meta).unwrap();
     let decoded: ChangeMetadata = serde_json::from_str(&json).unwrap();
@@ -99,7 +99,7 @@ fn v110_blind_change_round_trips() {
     let auth_tag = [3u8; 16];
     let meta = compat::client_v1_1_0::blind_change_metadata(
         "device-new",
-        key_id.clone(),
+        key_id,
         nonce,
         auth_tag,
     );

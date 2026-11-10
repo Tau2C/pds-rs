@@ -65,8 +65,8 @@ fn test_np_handshake_transcript_and_mutual_trust() {
     };
 
     let mut client_hello_hasher = Sha256::new();
-    client_hello_hasher.update(&client_hello.public_key);
-    client_hello_hasher.update(&client_hello.nonce);
+    client_hello_hasher.update(client_hello.public_key);
+    client_hello_hasher.update(client_hello.nonce);
     let client_hello_hash: [u8; 32] = client_hello_hasher.finalize().into();
 
     let server_hello = NpServerHello {
@@ -79,9 +79,9 @@ fn test_np_handshake_transcript_and_mutual_trust() {
     };
 
     let mut hasher = Sha256::new();
-    hasher.update(&client_hello.public_key);
-    hasher.update(&client_hello.nonce);
-    hasher.update(&server_hello.nonce);
+    hasher.update(client_hello.public_key);
+    hasher.update(client_hello.nonce);
+    hasher.update(server_hello.nonce);
     let transcript: [u8; 32] = hasher.finalize().into();
 
     let client_session = NpNode::compute_session_id(&transcript);
