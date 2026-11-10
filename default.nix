@@ -19,6 +19,7 @@ mkShell {
       ];
     })
     typst
+    gh
   ];
 }
 

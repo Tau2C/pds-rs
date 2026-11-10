@@ -306,8 +306,8 @@ mod tests {
         assert!(node_b.is_trusted(&client_hello.identity_id));
 
         let mut hasher = Sha256::new();
-        hasher.update(&node_a.public_key());
-        hasher.update(&nonce_a);
+        hasher.update(node_a.public_key());
+        hasher.update(nonce_a);
         let transcript: [u8; 32] = hasher.finalize().into();
 
         let session_id_a = NpNode::compute_session_id(&transcript);

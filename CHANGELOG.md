@@ -5,6 +5,27 @@ All notable changes to the Personal Data Store (PDS) project will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-11-10
+
+### Added
+- **Backward Compatibility Infrastructure (Phase 12)**:
+  - Client simulator modules for `v1.0.0` and `v1.1.0` in `tests/compat/`.
+  - Comprehensive backward compatibility integration suite in `tests/test_backward_compat.rs`.
+- **Dynamic API Version Negotiation (Phase 15)**:
+  - Dynamic API version resolution in `ClientAuthenticator` supporting `DEFAULT_SUPPORTED_API_VERSIONS` (`1.0.0`, `1.0.1`, `1.1.0`, `1.2.0`).
+  - `ClientHello` extended with `supported_versions` for multi-version client capability reporting.
+  - Active IPC `Session` now stores the agreed `api_version`.
+- **Continuous Integration Pipeline (Phase 13)**:
+  - GitHub Actions workflow `.github/workflows/ci.yml` running `cargo check`, strict clippy (`-D warnings`), and backward compatibility regression tests.
+- **Forward Compatibility & Schema Mutation Validation (Phase 14)**:
+  - `Operation::Unknown { action, payload }` variant preserving foreign and future action types without data loss during DAG replication.
+  - `DatasetState::apply_operation` gracefully skips unknown operations during state projection.
+  - `EntitySchema::validate_operation` for early pre-flight validation of entity property mutations against declared schemas.
+
+### Fixed
+- Added `#[serde(default)]` to `ChangeMetadata.encryption_mode` ensuring transparent deserialization of legacy `v1.0.x` payloads as `Plaintext`.
+- Resolved all clippy warnings across library targets and integration tests.
+
 ## [1.1.0] - 2026-11-06
 
 ### Added

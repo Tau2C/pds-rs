@@ -24,6 +24,7 @@ pub struct ChangeMetadata {
     pub device_id: String,
     pub timestamp: DateTime<Utc>,
     pub message: Option<String>,
+    #[serde(default)]
     pub encryption_mode: EncryptionMode,
 }
 
