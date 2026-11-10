@@ -77,6 +77,10 @@ impl DatasetState {
             Operation::DeleteRelation { relation_id } => {
                 self.relations.remove(relation_id);
             }
+            Operation::Unknown { .. } => {
+                // Unknown operations from newer or foreign versions are preserved in HistoryDag,
+                // but safely ignored during local state projection.
+            }
         }
     }
 

@@ -91,6 +91,23 @@ impl EntitySchema {
         Ok(())
     }
 
+    pub fn validate_operation(&self, op: &crate::operation::Operation) -> Result<(), SchemaValidationError> {
+        match op {
+            crate::operation::Operation::SetEntityProperty { name, value, .. } => {
+                if let Some(def) = self.properties.get(name).filter(|d| !self.matches_type(value, &d.expected_type)) {
+                    Err(SchemaValidationError::TypeMismatch {
+                        name: name.clone(),
+                        expected: def.expected_type.clone(),
+                        actual: self.val_type_name(value).into(),
+                    })
+                } else {
+                    Ok(())
+                }
+            }
+            _ => Ok(()),
+        }
+    }
+
     fn matches_type(&self, val: &PropertyValue, expected: &PropertyType) -> bool {
         matches!(
             (val, expected),
@@ -154,5 +171,39 @@ mod tests {
         entity.set_property("pages", 12);
         entity.set_property("custom_unknown_field", "dane z innej aplikacji");
         assert!(schema.validate(&entity).is_ok());
+    }
+
+    #[test]
+    fn test_schema_validate_operation() {
+        let mut schema = EntitySchema::new("document", 1);
+        schema.add_property("title", PropertyType::Text, true);
+        schema.add_property("pages", PropertyType::Int, false);
+
+        let entity_id = EntityId::new();
+
+        let valid_op = crate::operation::Operation::SetEntityProperty {
+            entity_id,
+            name: "title".into(),
+            value: PropertyValue::Text("Valid Title".into()),
+        };
+        assert!(schema.validate_operation(&valid_op).is_ok());
+
+        let invalid_op = crate::operation::Operation::SetEntityProperty {
+            entity_id,
+            name: "pages".into(),
+            value: PropertyValue::Text("nan".into()),
+        };
+        assert!(matches!(
+            schema.validate_operation(&invalid_op),
+            Err(SchemaValidationError::TypeMismatch { .. })
+        ));
+
+        // Unknown property on schema is allowed (open model)
+        let custom_op = crate::operation::Operation::SetEntityProperty {
+            entity_id,
+            name: "tags".into(),
+            value: PropertyValue::List(vec![]),
+        };
+        assert!(schema.validate_operation(&custom_op).is_ok());
     }
 }
