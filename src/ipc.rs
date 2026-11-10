@@ -1,12 +1,15 @@
 use crate::auth::{AuthChallenge, AuthSuccess, ClientAuth, ClientHello};
+use crate::blob::BlobDescriptor;
+use crate::change::Change;
 use crate::entity::Entity;
-use crate::id::{ChangeId, EntityId, RelationId};
+use crate::id::{BlobId, ChangeId, EntityId, RelationId};
 use crate::operation::Operation;
 use crate::relation::Relation;
 use crate::security::Permission;
 use crate::storage::DiskStorage;
 use crate::value::{PropertyName, PropertyValue};
 use chrono::{DateTime, Utc};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -34,6 +37,20 @@ pub enum IpcRequest {
         source: EntityId,
         target: EntityId,
     },
+    GetBlob {
+        session_id: String,
+        blob_id: BlobId,
+    },
+    PutBlob {
+        session_id: String,
+        data: Vec<u8>,
+        media_type: Option<String>,
+    },
+    PollChanges {
+        session_id: String,
+        since_change_id: Option<ChangeId>,
+        limit: Option<usize>,
+    },
     CloseSession {
         session_id: String,
     },
@@ -48,6 +65,12 @@ pub enum IpcResponse {
     EntityCreated(EntityId),
     Relation(Option<Relation>),
     RelationCreated(RelationId),
+    Blob(Vec<u8>),
+    BlobCreated(BlobDescriptor),
+    Changes {
+        changes: Vec<Change>,
+        latest_change_id: Option<ChangeId>,
+    },
     SessionClosed,
     Error(String),
 }
@@ -231,11 +254,220 @@ impl<'a> IpcServerHandler<'a> {
 
                 IpcResponse::RelationCreated(relation_id)
             }
+            IpcRequest::GetBlob {
+                session_id,
+                blob_id,
+            } => {
+                if let Err(err) =
+                    self.sessions.check_permission(&session_id, &Permission::ReadBlobs)
+                {
+                    return IpcResponse::Error(err.to_string());
+                }
+                match self.storage.blobs().get_data(&blob_id) {
+                    Ok(data) => IpcResponse::Blob(data),
+                    Err(err) => IpcResponse::Error(err.to_string()),
+                }
+            }
+            IpcRequest::PutBlob {
+                session_id,
+                data,
+                media_type,
+            } => {
+                if let Err(err) =
+                    self.sessions.check_permission(&session_id, &Permission::WriteBlobs)
+                {
+                    return IpcResponse::Error(err.to_string());
+                }
+                let blob_id = BlobId::new();
+                match self.storage.blobs_mut().put(blob_id, &data, media_type) {
+                    Ok(descriptor) => IpcResponse::BlobCreated(descriptor),
+                    Err(err) => IpcResponse::Error(err.to_string()),
+                }
+            }
+            IpcRequest::PollChanges {
+                session_id,
+                since_change_id,
+                limit,
+            } => {
+                if let Err(err) =
+                    self.sessions.check_permission(&session_id, &Permission::ReadHistory)
+                {
+                    return IpcResponse::Error(err.to_string());
+                }
+                let topological = self.storage.dag().topological_order();
+                let mut start_collecting = since_change_id.is_none();
+                let mut collected = Vec::new();
+                let max_limit = limit.unwrap_or(100);
+
+                for change in topological {
+                    if start_collecting {
+                        collected.push(change.clone());
+                        if collected.len() >= max_limit {
+                            break;
+                        }
+                    } else if since_change_id.as_ref() == Some(&change.id) {
+                        start_collecting = true;
+                    }
+                }
+                let latest_change_id = collected.last().map(|c| c.id);
+                IpcResponse::Changes {
+                    changes: collected,
+                    latest_change_id,
+                }
+            }
             IpcRequest::CloseSession { session_id } => {
                 self.sessions.remove_session(&session_id);
                 IpcResponse::SessionClosed
             }
         }
+    }
+}
+
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+pub enum IpcClientError {
+    #[error("Authentication failed: {0}")]
+    AuthFailed(String),
+    #[error("Session not established. Complete handshake first.")]
+    NoActiveSession,
+    #[error("Server returned error: {0}")]
+    ServerError(String),
+    #[error("Unexpected server response")]
+    UnexpectedResponse,
+}
+
+pub struct PdsIpcClient {
+    client_id: crate::auth::ClientId,
+    signing_key: ed25519_dalek::SigningKey,
+    session_id: Option<String>,
+    api_version: String,
+    negotiated_version: Option<String>,
+}
+
+impl PdsIpcClient {
+    pub fn new(client_id: crate::auth::ClientId, signing_key: ed25519_dalek::SigningKey) -> Self {
+        Self {
+            client_id,
+            signing_key,
+            session_id: None,
+            api_version: crate::auth::API_VERSION.to_string(),
+            negotiated_version: None,
+        }
+    }
+
+    pub fn with_api_version(mut self, version: impl Into<String>) -> Self {
+        self.api_version = version.into();
+        self
+    }
+
+    pub fn client_id(&self) -> crate::auth::ClientId {
+        self.client_id
+    }
+
+    pub fn session_id(&self) -> Option<&str> {
+        self.session_id.as_deref()
+    }
+
+    pub fn negotiated_version(&self) -> Option<&str> {
+        self.negotiated_version.as_deref()
+    }
+
+    pub fn start_handshake(&self, capabilities: Vec<String>) -> IpcRequest {
+        let mut nonce = [0u8; 32];
+        rand::rng().fill_bytes(&mut nonce);
+        let hello = ClientHello::new(self.client_id, &self.api_version, nonce, capabilities);
+        IpcRequest::Hello(hello)
+    }
+
+    pub fn handle_challenge(&mut self, challenge: &AuthChallenge) -> IpcRequest {
+        let sig = crate::auth::create_client_auth_signature(&self.signing_key, challenge);
+        IpcRequest::Authenticate(ClientAuth {
+            client_id: self.client_id,
+            signature: sig,
+        })
+    }
+
+    pub fn handle_auth_success(&mut self, success: &AuthSuccess) {
+        self.session_id = Some(success.session_id.clone());
+        self.negotiated_version = Some(success.api_version.clone());
+    }
+
+    pub fn require_session(&self) -> Result<&str, IpcClientError> {
+        self.session_id.as_deref().ok_or(IpcClientError::NoActiveSession)
+    }
+
+    pub fn get_entity_request(&self, entity_id: EntityId) -> Result<IpcRequest, IpcClientError> {
+        let session_id = self.require_session()?.to_string();
+        Ok(IpcRequest::GetEntity { session_id, entity_id })
+    }
+
+    pub fn create_entity_request(
+        &self,
+        entity_type: Option<String>,
+        properties: Vec<(PropertyName, PropertyValue)>,
+    ) -> Result<IpcRequest, IpcClientError> {
+        let session_id = self.require_session()?.to_string();
+        Ok(IpcRequest::CreateEntity {
+            session_id,
+            entity_type,
+            properties,
+        })
+    }
+
+    pub fn get_relation_request(&self, relation_id: RelationId) -> Result<IpcRequest, IpcClientError> {
+        let session_id = self.require_session()?.to_string();
+        Ok(IpcRequest::GetRelation { session_id, relation_id })
+    }
+
+    pub fn create_relation_request(
+        &self,
+        relation_type: String,
+        source: EntityId,
+        target: EntityId,
+    ) -> Result<IpcRequest, IpcClientError> {
+        let session_id = self.require_session()?.to_string();
+        Ok(IpcRequest::CreateRelation {
+            session_id,
+            relation_type,
+            source,
+            target,
+        })
+    }
+
+    pub fn get_blob_request(&self, blob_id: BlobId) -> Result<IpcRequest, IpcClientError> {
+        let session_id = self.require_session()?.to_string();
+        Ok(IpcRequest::GetBlob { session_id, blob_id })
+    }
+
+    pub fn put_blob_request(
+        &self,
+        data: Vec<u8>,
+        media_type: Option<String>,
+    ) -> Result<IpcRequest, IpcClientError> {
+        let session_id = self.require_session()?.to_string();
+        Ok(IpcRequest::PutBlob {
+            session_id,
+            data,
+            media_type,
+        })
+    }
+
+    pub fn poll_changes_request(
+        &self,
+        since_change_id: Option<ChangeId>,
+        limit: Option<usize>,
+    ) -> Result<IpcRequest, IpcClientError> {
+        let session_id = self.require_session()?.to_string();
+        Ok(IpcRequest::PollChanges {
+            session_id,
+            since_change_id,
+            limit,
+        })
+    }
+
+    pub fn close_session_request(&mut self) -> Result<IpcRequest, IpcClientError> {
+        let session_id = self.require_session()?.to_string();
+        self.session_id = None;
+        Ok(IpcRequest::CloseSession { session_id })
     }
 }
 
@@ -337,6 +569,99 @@ mod tests {
             Some(1234),
         );
         assert!(matches!(post_close, IpcResponse::Error(_)));
+
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn test_pds_ipc_client_full_flow() {
+        let temp_dir = std::env::temp_dir().join(format!("pds_ipc_client_test_{}", EntityId::new()));
+        let mut storage = DiskStorage::open(&temp_dir).unwrap();
+        let mut sessions = IpcSessionManager::new();
+        let mut authenticator = ClientAuthenticator::new("pds-local-node");
+
+        let signing_key = SigningKey::from_bytes(&[42u8; 32]);
+        let public_key = signing_key.verifying_key().to_bytes();
+        let client_id = authenticator.register_client("DesktopApp", public_key);
+
+        let mut perms = BTreeSet::new();
+        perms.insert(Permission::ReadEntities);
+        perms.insert(Permission::WriteEntities);
+        perms.insert(Permission::ReadBlobs);
+        perms.insert(Permission::WriteBlobs);
+        perms.insert(Permission::ReadHistory);
+        authenticator.approve_client(&client_id, perms);
+
+        let mut handler = IpcServerHandler::new(&mut storage, &mut sessions, &mut authenticator);
+        let mut client = PdsIpcClient::new(client_id, signing_key);
+
+        // 1. Handshake
+        let hello_req = client.start_handshake(vec!["entities".into(), "blobs".into()]);
+        let challenge = match handler.handle_request(hello_req, Some(5678)) {
+            IpcResponse::Challenge(c) => c,
+            other => panic!("Expected challenge, got {:?}", other),
+        };
+
+        let auth_req = client.handle_challenge(&challenge);
+        let success = match handler.handle_request(auth_req, Some(5678)) {
+            IpcResponse::Authenticated(s) => s,
+            other => panic!("Expected authenticated, got {:?}", other),
+        };
+        client.handle_auth_success(&success);
+        assert!(client.session_id().is_some());
+
+        // 2. Put and Get Blob over IPC
+        let blob_data = b"Hello from encrypted personal cloud blob!".to_vec();
+        let put_blob_req = client
+            .put_blob_request(blob_data.clone(), Some("text/plain".into()))
+            .unwrap();
+        let desc = match handler.handle_request(put_blob_req, Some(5678)) {
+            IpcResponse::BlobCreated(d) => d,
+            other => panic!("Expected BlobCreated, got {:?}", other),
+        };
+
+        let get_blob_req = client.get_blob_request(desc.id).unwrap();
+        match handler.handle_request(get_blob_req, Some(5678)) {
+            IpcResponse::Blob(retrieved) => assert_eq!(retrieved, blob_data),
+            other => panic!("Expected Blob, got {:?}", other),
+        }
+
+        // 3. Create Entity and Poll Changes
+        let create_req = client
+            .create_entity_request(
+                Some("note".into()),
+                vec![("title".into(), PropertyValue::Text("My Note".into()))],
+            )
+            .unwrap();
+        let entity_id = match handler.handle_request(create_req, Some(5678)) {
+            IpcResponse::EntityCreated(id) => id,
+            other => panic!("Expected EntityCreated, got {:?}", other),
+        };
+
+        let get_ent_req = client.get_entity_request(entity_id).unwrap();
+        match handler.handle_request(get_ent_req, Some(5678)) {
+            IpcResponse::Entity(Some(ent)) => {
+                assert_eq!(ent.entity_type.as_deref(), Some("note"));
+            }
+            other => panic!("Expected Entity, got {:?}", other),
+        }
+
+        let poll_req = client.poll_changes_request(None, Some(10)).unwrap();
+        match handler.handle_request(poll_req, Some(5678)) {
+            IpcResponse::Changes { changes, latest_change_id } => {
+                assert!(!changes.is_empty());
+                assert!(latest_change_id.is_some());
+            }
+            other => panic!("Expected Changes, got {:?}", other),
+        }
+
+        // 4. Close Session
+        let close_req = client.close_session_request().unwrap();
+        assert_eq!(
+            handler.handle_request(close_req, Some(5678)),
+            IpcResponse::SessionClosed
+        );
+        assert!(client.session_id().is_none());
 
         let _ = fs::remove_dir_all(&temp_dir);
     }
