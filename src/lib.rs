@@ -24,7 +24,7 @@ pub use archive::{PdsArchive, PdsArchiveMetadata};
 pub use auth::{
     create_client_auth_signature, AuthChallenge, AuthError, AuthSuccess, ClientAuth,
     ClientAuthenticator, ClientHello, ClientId, ClientRecord, ClientStatus, API_VERSION,
-    AUTH_CONTEXT_TAG,
+    AUTH_CONTEXT_TAG, DEFAULT_SUPPORTED_API_VERSIONS,
 };
 pub use blob::{BlobDescriptor, BlobError, BlobStore};
 pub use change::{Change, ChangeMetadata, EncryptionMode};
