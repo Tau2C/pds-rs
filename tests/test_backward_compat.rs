@@ -144,3 +144,51 @@ fn v100_change_reserializes_with_encryption_mode() {
         "rehydrated v1.0.0 change must serialize with encryption_mode; got: {reserialied}"
     );
 }
+
+/// A Change containing future/unknown operations must deserialize and preserve
+/// those operations for DAG sync while allowing local DatasetState projection.
+#[test]
+fn test_change_with_unknown_operation_projection_and_reserialization() {
+    let raw_json = serde_json::json!({
+        "id": ChangeId::new(),
+        "parents": [],
+        "metadata": {
+            "author_id": "future-user",
+            "device_id": "future-device",
+            "timestamp": "2026-11-10T12:00:00Z",
+            "message": "future operations test",
+            "encryption_mode": "Plaintext"
+        },
+        "operations": [
+            {
+                "action": "QuantumEncryptionKeyRotate",
+                "payload": {
+                    "key_algorithm": "Kyber1024",
+                    "slot": 1
+                }
+            }
+        ]
+    })
+    .to_string();
+
+    let change: Change = serde_json::from_str(&raw_json)
+        .expect("Change with unknown operation must deserialize safely");
+
+    assert_eq!(change.operations.len(), 1);
+    match &change.operations[0] {
+        pds::Operation::Unknown { action, payload } => {
+            assert_eq!(action, "QuantumEncryptionKeyRotate");
+            assert_eq!(payload["key_algorithm"], "Kyber1024");
+        }
+        other => panic!("Expected Operation::Unknown, got {:?}", other),
+    }
+
+    // Materialize state: must not fail or panic
+    let mut state = pds::DatasetState::new();
+    state.apply_change(&change);
+
+    // Re-serialize: must keep the exact same unknown operation payload
+    let reserialized = serde_json::to_string(&change).unwrap();
+    let re_decoded: Change = serde_json::from_str(&reserialized).unwrap();
+    assert_eq!(change, re_decoded);
+}
