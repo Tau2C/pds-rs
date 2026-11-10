@@ -51,6 +51,13 @@ W katalogu `examples/` znajdują się przykłady użycia:
    cargo run --example sync_nodes
    ```
 
+## Dokumentacja i integracja
+
+- [Przewodnik integracji klienta (`docs/client-integration-guide.md`)](docs/client-integration-guide.md) — Kompletny opis protokołu handshake IPC, operacji na encjach, blobów i subskrypcji zdarzeń.
+- [Architektura danych PDS (`PDS.md`)](PDS.md) — Główna specyfikacja modelu danych i DAG.
+- [Interfejs klienta (`PDS-Client-API.md`)](PDS-Client-API.md) — Specyfikacja komunikacji in-process oraz IPC.
+- [Protokół sieciowy (`PDS-NP.md`)](PDS-NP.md) — Specyfikacja komunikacji między węzłami PDS ↔ PDS.
+
 ## Uruchamianie testów
 
 ```bash
