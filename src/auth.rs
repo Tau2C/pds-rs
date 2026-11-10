@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use ulid::Ulid;
 
-pub const API_VERSION: &str = "1.1.0";
-pub const DEFAULT_SUPPORTED_API_VERSIONS: &[&str] = &["1.0.0", "1.0.1", "1.1.0"];
+pub const API_VERSION: &str = "1.2.0";
+pub const DEFAULT_SUPPORTED_API_VERSIONS: &[&str] = &["1.0.0", "1.0.1", "1.1.0", "1.2.0"];
 pub const AUTH_CONTEXT_TAG: &str = "PDS-CLIENT-AUTH-v1";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
