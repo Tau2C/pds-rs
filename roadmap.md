@@ -160,15 +160,15 @@ Cel: Wdrożenie kryptograficznej ochrony poufności danych w spoczynku, w tranzy
    - Aktualizacja dokumentów specyfikacji `PDS.md`, `PDS-Client-API.md`, `PDS-NP.md`.
    - Testy replikacji ślepego grafu DAG oraz cyklu życia szyfrowanych właściwości w `tests/test_e2ee_encryption.rs`.
 
-## Faza 12: Zgodność wsteczna i macierz wersji klientów (Backward Compatibility & Version Matrix) [W trakcie]
+## Faza 12: Zgodność wsteczna i macierz wersji klientów (Backward Compatibility & Version Matrix) [Zakończona]
 
 Cel: Zapewnienie bezproblemowej współpracy serwera PDS ze starszymi wersjami aplikacji klienckich oraz węzłami sieciowymi.
 
-1. **Macierz wersji protokołów i klientów** [Do zrobienia]:
+1. **Macierz wersji protokołów i klientów** [Zrealizowano]:
    - Zestaw atrap/symulatorów klientów dla wersji `v1.0.0`, `v1.0.1`, `v1.1.0`.
-   - Negocjacja wersji w `ClientHello` i `NpClientHello` z obsługą starszych klientów.
-2. **Automatyczne testy regresji i zgodności wstecznej** [Do zrobienia]:
-   - Testy odczytu i zapisu danych utworzonych przez starsze wersje struktur.
-   - Weryfikacja migracji binarnej i zachowania nieznanych pól.
+   - Negocjacja wersji w `ClientHello` i `ClientAuthenticator` (`DEFAULT_SUPPORTED_API_VERSIONS`) z wyborem najwyższej wspólnej wersji.
+2. **Automatyczne testy regresji i zgodności wstecznej** [Zrealizowano]:
+   - Testy odczytu i zapisu danych utworzonych przez starsze wersje struktur bez `encryption_mode` (`tests/test_backward_compat.rs`).
+   - Weryfikacja deserializacji z `#[serde(default)]` i poprawności round-trip.
 
 
