@@ -92,20 +92,20 @@ impl EntitySchema {
     }
 
     fn matches_type(&self, val: &PropertyValue, expected: &PropertyType) -> bool {
-        match (val, expected) {
-            (_, PropertyType::Any) => true,
-            (PropertyValue::Encrypted { .. }, _) => true,
-            (PropertyValue::Bool(_), PropertyType::Bool) => true,
-            (PropertyValue::Int(_), PropertyType::Int) => true,
-            (PropertyValue::Float(_), PropertyType::Float) => true,
-            (PropertyValue::Text(_), PropertyType::Text) => true,
-            (PropertyValue::DateTime(_), PropertyType::DateTime) => true,
-            (PropertyValue::EntityRef(_), PropertyType::EntityRef) => true,
-            (PropertyValue::BlobRef(_), PropertyType::BlobRef) => true,
-            (PropertyValue::List(_), PropertyType::List) => true,
-            (PropertyValue::Map(_), PropertyType::Map) => true,
-            _ => false,
-        }
+        matches!(
+            (val, expected),
+            (_, PropertyType::Any)
+                | (PropertyValue::Encrypted { .. }, _)
+                | (PropertyValue::Bool(_), PropertyType::Bool)
+                | (PropertyValue::Int(_), PropertyType::Int)
+                | (PropertyValue::Float(_), PropertyType::Float)
+                | (PropertyValue::Text(_), PropertyType::Text)
+                | (PropertyValue::DateTime(_), PropertyType::DateTime)
+                | (PropertyValue::EntityRef(_), PropertyType::EntityRef)
+                | (PropertyValue::BlobRef(_), PropertyType::BlobRef)
+                | (PropertyValue::List(_), PropertyType::List)
+                | (PropertyValue::Map(_), PropertyType::Map)
+        )
     }
 
     fn val_type_name(&self, val: &PropertyValue) -> &'static str {

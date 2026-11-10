@@ -33,7 +33,7 @@ fn test_ipc_authentication_and_unauthorized_rejections() {
 
     // Step 1: Valid handshake flow
     let hello = ClientHello::new(
-        client_id.clone(),
+        client_id,
         API_VERSION,
         [1u8; 32],
         vec!["entities".to_string()],
@@ -46,7 +46,7 @@ fn test_ipc_authentication_and_unauthorized_rejections() {
 
     let valid_sig = create_client_auth_signature(&signing_key, &challenge);
     let valid_auth = ClientAuth {
-        client_id: client_id.clone(),
+        client_id,
         signature: valid_sig,
     };
     let valid_resp = handler.handle_request(IpcRequest::Authenticate(valid_auth), Some(9999));
@@ -64,7 +64,7 @@ fn test_ipc_authentication_and_unauthorized_rejections() {
 
     // Step 2: Test rejection with forged/wrong key on a fresh challenge
     let hello_forged = ClientHello::new(
-        client_id.clone(),
+        client_id,
         API_VERSION,
         [2u8; 32],
         vec![],
@@ -76,7 +76,7 @@ fn test_ipc_authentication_and_unauthorized_rejections() {
     let wrong_key = SigningKey::from_bytes(&[8u8; 32]);
     let forged_sig = create_client_auth_signature(&wrong_key, &forged_challenge);
     let forged_auth = ClientAuth {
-        client_id: client_id.clone(),
+        client_id,
         signature: forged_sig,
     };
     let forged_resp = handler.handle_request(IpcRequest::Authenticate(forged_auth), Some(9999));
